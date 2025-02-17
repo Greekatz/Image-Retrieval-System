@@ -5,4 +5,4 @@ Pillow
 huggingface_hub
 numpy
 pandas
-pinecone-client
+chromadb
