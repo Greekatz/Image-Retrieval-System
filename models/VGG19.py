@@ -3,7 +3,7 @@ import torchvision.models as models
 import torchvision.transforms as transforms
 from PIL import Image
 
-import os
+
 
 class VGG19:
     def __init__(self):
@@ -21,10 +21,10 @@ class VGG19:
         image = self.transform(image).unsqueeze(0).to(self.device)
         return image
     
-    def features_extractor(self, image_path):
+    def feature_extractor(self, image):
         """Extract features from the given image path"""
-        image = self.preprocess_image(image_path)
+        image = self.preprocess_image(image)
         with torch.no_grad():
-            features = self.model(image)
-        return features.flatten().cpu().numpy()
-    
+            image_features = self.model(image)
+            image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+        return image_features

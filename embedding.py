@@ -4,11 +4,13 @@ import torch
 import numpy as np
 from glob import glob
 from PIL import Image
-from transformers import CLIPProcessor, CLIPModel
+from models.CLIP import CLIP
+from models.VGG19 import VGG19 
+from models.ResNet50 import ResNet50
 
 class Embedding:
     def __init__(self, image_folder="E:/Github/PreThesis/dataset/flickr30k_images",
-                 index_path="image_embeddings.faiss", metadata_path="image_files.txt", chunk_size=256):
+                 index_path="image_embeddings.faiss", metadata_path="image_files.txt", chunk_size=256, model_type="clip"):
         """
         Initializes the embedding class for FAISS indexing using Hugging Face's CLIP model.
 
@@ -18,32 +20,44 @@ class Embedding:
         :param chunk_size: Number of images processed per batch (default: 256).
         """
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        
-        # Load CLIP model from transformers
-        self.model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(self.device)
-        self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
-
         self.image_folder = image_folder
         self.index_path = index_path
         self.metadata_path = metadata_path
         self.chunk_size = chunk_size
-        self.dim = 512  # CLIP ViT-B/32 produces 512-dimensional embeddings
+        self.model_type = model_type.lower()
+        
+        # Load the selected model
+        self.model, self.dim = self.load_model()
+        
+        # Initialize FAISS index
         self.index = faiss.IndexFlatIP(self.dim)  # Inner Product similarity
         self.index = faiss.IndexIDMap(self.index)  # Allows ID-based mapping
+    
+    
+    def load_model(self):
+        """
+        Loads the model for feature extraction.
+        """
+        if self.model_type == "clip":
+            model = CLIP()
+            dim = 512
+        elif self.model_type == "vgg19":
+            model =  VGG19()
+            dim = 4096
+        elif self.model_type == "resnet50":
+            model = ResNet50()
+            dim = 2048
+        else:
+            raise ValueError(f"Invalid model type: {self.model_type}")
+        
+        return model, dim
 
     def process_chunk(self, chunk):
         """
-        Processes a batch of images and extracts embeddings using CLIP.
-
-        :param chunk: List of image file paths.
-        :return: NumPy array of CLIP embeddings.
+        Processes a batch of images and extracts embeddings using the selected model.
         """
         images = [Image.open(img_path).convert("RGB") for img_path in chunk]
-        inputs = self.processor(images=images, return_tensors="pt").to(self.device)
-
-        with torch.no_grad():
-            embeddings = self.model.get_image_features(**inputs)  # Extract CLIP image features
-        embeddings = embeddings.cpu().numpy()  # Convert to NumPy array
+        embeddings = np.array([self.model.feature_extractor(img) for img in images], dtype="float32")
         return embeddings
 
     def build_index(self):
@@ -54,12 +68,13 @@ class Embedding:
         image_embeddings = []
         image_ids = []
 
+        start_id = 0
         for i in range(0, len(image_files), self.chunk_size):
-            print(f"Processing chunk {i}/{len(image_files)}...")
             chunk = image_files[i : i + self.chunk_size]
             embeddings = self.process_chunk(chunk)
             image_embeddings.append(embeddings)
-            image_ids.extend(range(len(image_ids), len(image_ids) + len(embeddings)))
+            image_ids.extend(range(start_id, start_id + len(embeddings)))
+            start_id += len(embeddings)
 
         image_embeddings = np.vstack(image_embeddings)
         vectors = np.array(image_embeddings, dtype="float32")
@@ -85,7 +100,9 @@ class Embedding:
             self.index = faiss.read_index(self.index_path)
             print("FAISS index loaded successfully.")
 
-# Run embedding process when executing this file
 if __name__ == "__main__":
-    embedding = Embedding(image_folder="E:/Github/PreThesis/dataset/flickr30k_images")
-    embedding.build_index()  # Generates and saves FAISS index
+    model_types = ["clip", "vgg19", "resnet50"]
+    for model in model_types:
+        print(f"Building index with {model}...")
+        embedding = Embedding(image_folder="E:/Github/PreThesis/dataset/flickr30k_images", model_type=model)
+        embedding.build_index()

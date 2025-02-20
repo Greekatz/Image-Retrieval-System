@@ -9,7 +9,7 @@ class CLIP:
         self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
         self.model.eval()
 
-    def image_feature_extractor(self, image):
+    def feature_extractor(self, image):
         inputs = self.processor(images=image, return_tensors="pt").to(self.device)
         with torch.no_grad():
             image_features = self.model.get_image_features(**inputs)
@@ -26,7 +26,7 @@ class CLIP:
             return text_features
     
     def similarity_score(self, image, text):
-        image_features = self.image_feature_extractor(image)
+        image_features = self.feature_extractor(image)
         text_features = self.text_feature_extractor(text)
         with torch.no_grad():
             similarity = (image_features @ text_features.T).mean().item()
