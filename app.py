@@ -98,9 +98,17 @@ def image_to_image(image, feature_extractor, k=10):
 
     return nearest_images, nearest_distances
 
-def text_to_image(image, feature_extractor, k=10):
-    query_text = 
+def text_to_image(text, feature_extractor, k=10):
+    query_text =  clip_model.text_feature_extractor(text).cpu().numpy
+    distances, indices = index.search(query_text, k)
 
+    # Ensure valid indices (avoid out-of-range errors)
+    valid_indices = [idx for idx in indices[0] if idx < len(image_files)]
+
+    nearest_images = [image_files[idx] for idx in valid_indices]
+    nearest_distances = [distances[0][i] for i in range(len(valid_indices))]
+
+    return nearest_images, nearest_distances
 
 def main():
     st.set_page_config(page_title="Prethesis Image Retrieval", layout="wide")
