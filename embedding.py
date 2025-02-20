@@ -43,7 +43,7 @@ class Embedding:
             dim = 512
         elif self.model_type == "vgg19":
             model =  VGG19()
-            dim = 4096
+            dim = 512
         elif self.model_type == "resnet50":
             model = ResNet50()
             dim = 2048
@@ -58,6 +58,7 @@ class Embedding:
         """
         images = [Image.open(img_path).convert("RGB") for img_path in chunk]
         embeddings = np.array([self.model.feature_extractor(img) for img in images], dtype="float32")
+        embeddings = embeddings.reshape(len(images), -1)
         return embeddings
 
     def build_index(self):
@@ -70,8 +71,10 @@ class Embedding:
 
         start_id = 0
         for i in range(0, len(image_files), self.chunk_size):
+            print(f"Processing chunk {i}/{len(image_files)}")
             chunk = image_files[i : i + self.chunk_size]
             embeddings = self.process_chunk(chunk)
+            print(f"Chunk {i}: Embedding shape: {embeddings.shape}")
             image_embeddings.append(embeddings)
             image_ids.extend(range(start_id, start_id + len(embeddings)))
             start_id += len(embeddings)
@@ -101,7 +104,7 @@ class Embedding:
             print("FAISS index loaded successfully.")
 
 if __name__ == "__main__":
-    model_types = ["clip", "vgg19", "resnet50"]
+    model_types = ["vgg19","clip"]
     for model in model_types:
         print(f"Building index with {model}...")
         embedding = Embedding(image_folder="E:/Github/PreThesis/dataset/flickr30k_images", model_type=model)

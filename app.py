@@ -3,7 +3,8 @@ import torch
 import faiss
 import streamlit as st
 from PIL import Image
-from models.CLIP import CLIP  # Ensure your CLIP class is correctly imported
+from models.CLIP import CLIP 
+from models.VGG19 import VGG19
 
 import os
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
