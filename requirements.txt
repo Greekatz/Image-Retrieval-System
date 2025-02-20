@@ -2,7 +2,9 @@ torch
 transformers
 streamlit
 Pillow
-huggingface_hub
 numpy
 pandas
-chromadb
+faiss-cpu
+torchvision
+tqdm
+open-clip-torch

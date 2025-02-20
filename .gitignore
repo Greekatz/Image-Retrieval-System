@@ -1,2 +1,6 @@
 venv
 .env
+__pycache__
+dataset/flickr30k_images
+image_embeddings.faiss
+image_files.txt

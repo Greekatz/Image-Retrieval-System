@@ -1,5 +1,6 @@
 import torch
 from transformers import CLIPProcessor, CLIPModel
+import numpy as np
 
 class CLIP:
     def __init__(self):
@@ -11,14 +12,18 @@ class CLIP:
     def image_feature_extractor(self, image):
         inputs = self.processor(images=image, return_tensors="pt").to(self.device)
         with torch.no_grad():
-            outputs = self.model.get_image_features(**inputs)
-        return outputs
+            image_features = self.model.get_image_features(**inputs)
+            image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+        return image_features
     
     def text_feature_extractor(self, text):
-        inputs = self.processor(text=text, return_tensors="pt").to(self.device)
         with torch.no_grad():
-            outputs = self.model.get_text_features(**inputs)
-        return outputs
+            inputs = self.processor(text=[text], return_tensors="pt", padding=True).to(
+                self.device
+            )
+            text_features = self.model.get_text_features(**inputs)
+            text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+            return text_features
     
     def similarity_score(self, image, text):
         image_features = self.image_feature_extractor(image)

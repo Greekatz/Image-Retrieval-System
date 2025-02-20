@@ -3,6 +3,8 @@ import torchvision.models as models
 import torchvision.transforms as transforms
 from PIL import Image
 
+import os
+
 class VGG19:
     def __init__(self):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -14,14 +16,15 @@ class VGG19:
         ])
     
     def preprocess_image(self, image_path):
+        """Load and preprocess a single image."""
         image = Image.open(image_path).convert("RGB")
         image = self.transform(image).unsqueeze(0).to(self.device)
         return image
     
-    def extract_features(self, image_path):
+    def features_extractor(self, image_path):
         """Extract features from the given image path"""
         image = self.preprocess_image(image_path)
         with torch.no_grad():
             features = self.model(image)
-        return features
+        return features.flatten().cpu().numpy()
     
