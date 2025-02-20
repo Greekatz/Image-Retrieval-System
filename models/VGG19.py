@@ -32,7 +32,7 @@ class VGG19:
 
            
             image_features = torch.nn.functional.adaptive_avg_pool2d(image_features, (1, 1))
-            image_features = image_features.view(image_features.size(0), -1)  # Flatten to (1, 4096)
+            image_features = image_features.view(image_features.size(0), -1)  
             image_features = image_features / image_features.norm(dim=-1, keepdim=True)
         
         return image_features  
