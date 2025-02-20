@@ -1,1 +1,1 @@
-# PreThesis
+# PreThesis - Image Retrieval
