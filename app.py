@@ -15,49 +15,10 @@ METADATA_PATH = "image_files.txt"
 
 clip_model = CLIP()
 
-# Load FAISS index
-index = faiss.read_index(INDEX_PATH)
-
-# Load image file paths
-with open(METADATA_PATH, "r") as f:
-    image_files = f.read().splitlines()
-
-def choose_model(model_type):
-    if model_type == "CLIP":
-        return CLIP()
-    elif model_type == "VGG19":
-        return VGG19()
-    else:
-        st.error(f"Unkowwn model: {model_type}")
-
-
-import time
-import torch
-import faiss
-import streamlit as st
-from PIL import Image
-from models.CLIP import CLIP
-from models.VGG19 import VGG19
-
-import os
-os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-
-# Paths
-INDEX_PATH = "image_embeddings.faiss"
-METADATA_PATH = "image_files.txt"
-
-# Load image file paths
-if not os.path.exists(METADATA_PATH):
-    st.error("Metadata file not found! Please run `embedding.py` first.")
-    st.stop()
 
 with open(METADATA_PATH, "r") as f:
     image_files = f.read().splitlines()
 
-# Load FAISS index
-if not os.path.exists(INDEX_PATH):
-    st.error("FAISS index file not found! Please run `embedding.py` first.")
-    st.stop()
 
 index = faiss.read_index(INDEX_PATH)
 

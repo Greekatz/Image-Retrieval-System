@@ -65,7 +65,7 @@ class Embedding:
         """
         Reads images, extracts embeddings, and builds a FAISS index.
         """
-        image_files = glob(os.path.join(self.image_folder, "*.jpg"))  # Adjust for different formats
+        image_files = glob(os.path.join(self.image_folder, "*.jpg"))  
         image_embeddings = []
         image_ids = []
 
